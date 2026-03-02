@@ -33,3 +33,24 @@ jobs:
           curl -f ${{ steps.twenty.outputs.server-url }}/healthz
           echo ""
           echo "Twenty instance is healthy!"
+
+      - name: Verify image origin
+        run: |
+          SERVER_IMAGE=$(docker inspect twenty-server-1 --format='{{.Config.Image}}')
+          echo "Server image: $SERVER_IMAGE"
+
+          if [ -n "${{ github.event.inputs.twenty-ref }}" ]; then
+            echo "Expected: locally built image"
+            if echo "$SERVER_IMAGE" | grep -q "twentycrm/twenty:"; then
+              echo "::error::Server is using a Docker Hub image, expected a locally built one"
+              exit 1
+            fi
+            echo "Confirmed: image was built from source"
+          else
+            echo "Expected: Docker Hub image with tag '${{ github.event.inputs.twenty-version || 'latest' }}'"
+            if ! echo "$SERVER_IMAGE" | grep -q "twentycrm/twenty:"; then
+              echo "::error::Server is not using a Docker Hub image"
+              exit 1
+            fi
+            echo "Confirmed: image was pulled from Docker Hub"
+          fi
