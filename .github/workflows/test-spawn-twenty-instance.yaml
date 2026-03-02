@@ -20,11 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-
       - name: Spawn Twenty instance
         id: twenty
-        uses: ./.github/actions/spawn-twenty-instance
+        uses: twentyhq/twenty/.github/actions/spawn-twenty-instance@feat-ci
         with:
           twenty-version: ${{ github.event.inputs.twenty-version }}
           twenty-ref: ${{ github.event.inputs.twenty-ref }}
