@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       twenty-version:
-        description: 'Docker Hub image tag (e.g., latest, v0.40.0)'
+        description: 'Docker Hub image tag (e.g., latest, v0.40.0). Leave empty when using twenty-ref.'
         required: false
-        default: 'latest'
+        default: ''
       twenty-ref:
-        description: 'Git branch, tag, or SHA to build from source (leave empty to use Docker Hub)'
+        description: 'Git branch, tag, or SHA to build from source. Leave empty to use Docker Hub.'
         required: false
         default: ''
 
