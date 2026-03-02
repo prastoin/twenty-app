@@ -1,0 +1,37 @@
+name: Test Spawn Twenty Instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      twenty-version:
+        description: 'Docker Hub image tag (e.g., latest, v0.40.0)'
+        required: false
+        default: 'latest'
+      twenty-ref:
+        description: 'Git branch, tag, or SHA to build from source (leave empty to use Docker Hub)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  spawn-and-healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Spawn Twenty instance
+        id: twenty
+        uses: ./.github/actions/spawn-twenty-instance
+        with:
+          twenty-version: ${{ github.event.inputs.twenty-version }}
+          twenty-ref: ${{ github.event.inputs.twenty-ref }}
+
+      - name: Health check
+        run: |
+          echo "Server URL: ${{ steps.twenty.outputs.server-url }}"
+          curl -f ${{ steps.twenty.outputs.server-url }}/healthz
+          echo ""
+          echo "Twenty instance is healthy!"
