@@ -20,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Spawn Twenty instance
         id: twenty
         uses: twentyhq/twenty/.github/actions/spawn-twenty-instance@feat-ci
@@ -34,23 +37,21 @@ jobs:
           echo ""
           echo "Twenty instance is healthy!"
 
-      - name: Verify image origin
-        run: |
-          SERVER_IMAGE=$(docker inspect twenty-server-1 --format='{{.Config.Image}}')
-          echo "Server image: $SERVER_IMAGE"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
 
-          if [ -n "${{ github.event.inputs.twenty-ref }}" ]; then
-            echo "Expected: locally built image"
-            if echo "$SERVER_IMAGE" | grep -q "twentycrm/twenty:"; then
-              echo "::error::Server is using a Docker Hub image, expected a locally built one"
-              exit 1
-            fi
-            echo "Confirmed: image was built from source"
-          else
-            echo "Expected: Docker Hub image with tag '${{ github.event.inputs.twenty-version || 'latest' }}'"
-            if ! echo "$SERVER_IMAGE" | grep -q "twentycrm/twenty:"; then
-              echo "::error::Server is not using a Docker Hub image"
-              exit 1
-            fi
-            echo "Confirmed: image was pulled from Docker Hub"
-          fi
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        working-directory: hello-world
+        run: yarn install --immutable
+
+      - name: Run integration tests
+        working-directory: hello-world
+        env:
+          TWENTY_API_URL: ${{ steps.twenty.outputs.server-url }}
+          TWENTY_API_KEY: ${{ steps.twenty.outputs.access-token }}
+        run: yarn test:integration
